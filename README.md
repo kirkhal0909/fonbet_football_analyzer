@@ -17,3 +17,8 @@
 <strong>FonbetDataDownloader</strong>.<strong>minusDays</strong>(days=1) - изменить дату загрузки, сделать дату на дней days=n меньше<br>
 <strong>FonbetDataDownloader</strong>.<strong>getRequest</strong>() - получить последний запрос<br>
 <strong>FonbetDataDownloader</strong>.<strong>download</strong>(daysDownload=0) - загрузить daysDownload=n дней. Если значение 0, то берётся значение при инициализации класса</p>
+<ul>
+<li class="has-line-data" data-line-start="24" data-line-end="25"></li>
+</ul>
+<p class="has-line-data" data-line-start="25" data-line-end="27"><strong>FootballDataAnalyzer</strong>() - класс для анализа на основе загруженных данных.<br>
+При инициализации <strong>football</strong> = <strong>FootballDataAnalyzer</strong>() создаётся CSV файл</p>
