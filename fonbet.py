@@ -255,8 +255,9 @@ class FootballDataAnalyzer:
             for i in range(3):
                 statsFirstGoal[i] = statsFirstGoal[i].split('.')[0]
                 statsFirstGoal[-i-1] += "%"
+            statsFirstGoal.append(str(minute))
             data.append(statsFirstGoal)
-        headers = ["Побед", "Победа или ничья", "Игр", "Побед %", "Победа или ничья %", "Поражение %"]
+        headers = ["Побед", "Победа или ничья", "Игр", "Побед %", "Победа или ничья %", "Поражение %","Первый гол не раньше минуты"]
         self.__saveStats__(data, "firstGoal", headers)
 
     def __winsWichFirstGoal__(self, fromMinute=0):
