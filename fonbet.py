@@ -179,6 +179,7 @@ class FootballDataAnalyzer:
 
     __selfFolderStats__ = STATS_FOLDER
     __selfFileStatsFormat__ = "{folder}\\{stats}.csv"
+    __selfFullData__ = []
 
     def __init__(self):
         files = os.listdir(self.__selfFolderData__)
@@ -188,6 +189,7 @@ class FootballDataAnalyzer:
             self.__files__.append(fileFormat.format(file=file))
         if not os.path.exists(self.__selfFolderStats__):
             os.mkdir(self.__selfFolderStats__)
+        self.__readFiles__()
 
         print(self.__files__[0], self.__files__[-1])
         print("count games: {}".format(self.countGames()))
@@ -212,26 +214,31 @@ class FootballDataAnalyzer:
         csv.close()
         return data
 
-    def countGames(self):
-        count = 0
+    def __readFiles__(self):
+        self.__selfFullData__ = ""
         for file in self.__files__:
-            count += self.__readFile__(file).count("\n")
-        return count
+            self.__selfFullData__ += self.__readFile__(file)
+        self.__selfFullData__ = self.__selfFullData__[:-1].split("\n")
+        for i in range(len(self.__selfFullData__)):
+            self.__selfFullData__[i] = self.__selfFullData__[i].split(self.__selfSpliter__)
+            intColumns = [DATA_COLUMN_GOAL_1, DATA_COLUMN_GOAL_2, DATA_COLUMN_FIRST_GOAL, DATA_COLUMN_FIRST_GOAL_MINUTE]
+            for indexColumn in intColumns:
+                self.__selfFullData__[i][indexColumn] = int(self.__selfFullData__[i][indexColumn])
+
+    def countGames(self):
+        return len(self.__selfFullData__)
 
     def countTeams(self):
         teams = {}
-        for file in self.__files__:
-            data = self.__readFile__(file).split('\n')
-            for row in data[:-1]:
-                row = row.split(self.__selfSpliter__)
-                try:
-                    teams[row[DATA_COLUMN_TEAM_1]] += 1
-                except:
-                    teams[row[DATA_COLUMN_TEAM_1]] = 1
-                try:
-                    teams[row[DATA_COLUMN_TEAM_2]] += 1
-                except:
-                    teams[row[DATA_COLUMN_TEAM_2]] = 1
+        for row in self.__selfFullData__:
+            try:
+                teams[row[DATA_COLUMN_TEAM_1]] += 1
+            except:
+                teams[row[DATA_COLUMN_TEAM_1]] = 1
+            try:
+                teams[row[DATA_COLUMN_TEAM_2]] += 1
+            except:
+                teams[row[DATA_COLUMN_TEAM_2]] = 1
         #print(sorted(list(teams)))
         #print(teams)
         return len(teams)
@@ -265,29 +272,26 @@ class FootballDataAnalyzer:
         wins = 0
         winsAndDraw = 0
         lose = 0
-        for file in self.__files__:
-            data = self.__readFile__(file)
-            for row in data.split("\n")[:-1]:
-                row = row.split(self.__selfSpliter__)
-                firstGoalAt = int(row[DATA_COLUMN_FIRST_GOAL_MINUTE])
-                if firstGoalAt >= fromMinute:
-                    firstGoal = int(row[DATA_COLUMN_FIRST_GOAL])
-                    goalsTeam1 = int(row[DATA_COLUMN_GOAL_1])
-                    goalsTeam2 = int(row[DATA_COLUMN_GOAL_2])
-                    if firstGoal != 0:
-                        games += 1
-                    if (firstGoal == 1 and goalsTeam1 > goalsTeam2):
-                        wins += 1
-                    elif firstGoal == 2 and goalsTeam2 > goalsTeam1:
-                        wins += 1
-                    if (firstGoal == 1 and goalsTeam1 >= goalsTeam2):
-                        winsAndDraw += 1
-                    elif firstGoal == 2 and goalsTeam2 >= goalsTeam1:
-                        winsAndDraw += 1
-                    if (firstGoal == 1 and goalsTeam1 < goalsTeam2):
-                        lose += 1
-                    elif firstGoal == 2 and goalsTeam2 < goalsTeam1:
-                        lose += 1
+        for row in self.__selfFullData__:
+            firstGoalAt = row[DATA_COLUMN_FIRST_GOAL_MINUTE]
+            if firstGoalAt >= fromMinute:
+                firstGoal = row[DATA_COLUMN_FIRST_GOAL]
+                goalsTeam1 = row[DATA_COLUMN_GOAL_1]
+                goalsTeam2 = row[DATA_COLUMN_GOAL_2]
+                if firstGoal != 0:
+                    games += 1
+                if (firstGoal == 1 and goalsTeam1 > goalsTeam2):
+                    wins += 1
+                elif firstGoal == 2 and goalsTeam2 > goalsTeam1:
+                    wins += 1
+                if (firstGoal == 1 and goalsTeam1 >= goalsTeam2):
+                    winsAndDraw += 1
+                elif firstGoal == 2 and goalsTeam2 >= goalsTeam1:
+                    winsAndDraw += 1
+                if (firstGoal == 1 and goalsTeam1 < goalsTeam2):
+                    lose += 1
+                elif firstGoal == 2 and goalsTeam2 < goalsTeam1:
+                    lose += 1
         outResult = [wins, winsAndDraw, games, (wins/games)*100, (winsAndDraw/games)*100, (lose/games)*100]
         for i in range(len(outResult)):
             outResult[i] = "{:.2f}".format(outResult[i])
