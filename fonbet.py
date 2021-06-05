@@ -3,6 +3,7 @@ import datetime
 import os
 import time
 import webbrowser
+from operator import itemgetter
 
 
 STATS_FOLDER = "stats"
@@ -180,6 +181,8 @@ class FootballDataAnalyzer:
     __selfFolderStats__ = STATS_FOLDER
     __selfFileStatsFormat__ = "{folder}\\{stats}.csv"
     __selfFullData__ = []
+    __teams__ = {}
+    __scoreboardTeams__ = {}
 
     def __init__(self):
         files = os.listdir(self.__selfFolderData__)
@@ -190,6 +193,9 @@ class FootballDataAnalyzer:
         if not os.path.exists(self.__selfFolderStats__):
             os.mkdir(self.__selfFolderStats__)
         self.__readFiles__()
+        self.__createListTeams__()
+        self.__createScoreboardTeams__()
+        self.__scoreboardTeamsSort__("games")
 
         print(self.__files__[0], self.__files__[-1])
         print("count games: {}".format(self.countGames()))
@@ -197,6 +203,7 @@ class FootballDataAnalyzer:
         #print("wins with first goal "+
         #      "{} ({}) from {} = W{}% (WD{}%)  L{}%".format(statsFirstGoal[0], statsFirstGoal[1], statsFirstGoal[2], statsFirstGoal[3], statsFirstGoal[4], statsFirstGoal[5]))
         self.winsWichFirstGoalByMinutes()
+        self.__saveScoreboardTeams__()
 
     def __conservativeClean__(self, data):
         data = data.split("\n")
@@ -229,19 +236,19 @@ class FootballDataAnalyzer:
         return len(self.__selfFullData__)
 
     def countTeams(self):
-        teams = {}
+        return len(self.__teams__)
+
+    def __createListTeams__(self):
+        self.__teams__ = {}
         for row in self.__selfFullData__:
             try:
-                teams[row[DATA_COLUMN_TEAM_1]] += 1
+                self.__teams__[row[DATA_COLUMN_TEAM_1]] += 1
             except:
-                teams[row[DATA_COLUMN_TEAM_1]] = 1
+                self.__teams__[row[DATA_COLUMN_TEAM_1]] = 1
             try:
-                teams[row[DATA_COLUMN_TEAM_2]] += 1
+                self.__teams__[row[DATA_COLUMN_TEAM_2]] += 1
             except:
-                teams[row[DATA_COLUMN_TEAM_2]] = 1
-        #print(sorted(list(teams)))
-        #print(teams)
-        return len(teams)
+                self.__teams__[row[DATA_COLUMN_TEAM_2]] = 1
 
     def __saveStats__(self, data, fileName, headers=[]):
         csv = open(self.__selfFileStatsFormat__.format(folder=self.__selfFolderStats__, stats=fileName), 'w')
@@ -296,6 +303,69 @@ class FootballDataAnalyzer:
         for i in range(len(outResult)):
             outResult[i] = "{:.2f}".format(outResult[i])
         return outResult
+
+    def __createScoreboardTeams__(self, minGames = 10):
+        self.__scoreboardTeams__ = {}
+        for team in list(self.__teams__):
+            if self.__teams__[team] >= minGames:
+                self.__scoreboardTeams__[team] = {"wins": 0, "draws": 0, "loses":0, "goals": 0, "intersepted":0, "games": 0}
+
+
+        for row in self.__selfFullData__:
+            #team1Exist = row[DATA_COLUMN_TEAM_1] in list(self.__scoreboardTeams__)
+            #team2Exist = row[DATA_COLUMN_TEAM_2] in list(self.__scoreboardTeams__)
+            team1Exist = True
+            try:
+                self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_1]]
+            except:
+                team1Exist = False
+            team2Exist = True
+            try:
+                self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_2]]
+            except:
+                team2Exist = False
+
+            if team1Exist:
+                self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_1]]["games"] += 1
+                self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_1]]["goals"] += row[DATA_COLUMN_GOAL_1]
+                self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_1]]["intersepted"] += (row[DATA_COLUMN_GOAL_1] - row[DATA_COLUMN_GOAL_2])
+
+            if team2Exist:
+                self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_2]]["games"] += 1
+                self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_2]]["goals"] += row[DATA_COLUMN_GOAL_2]
+                self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_2]]["intersepted"] += (row[DATA_COLUMN_GOAL_2]-row[DATA_COLUMN_GOAL_1])
+
+            if row[DATA_COLUMN_GOAL_1] > row[DATA_COLUMN_GOAL_2]:
+                if team1Exist:
+                    self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_1]]["wins"] += 1
+                if team2Exist:
+                    self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_2]]["loses"] += 1
+            elif row[DATA_COLUMN_GOAL_1] == row[DATA_COLUMN_GOAL_2]:
+                if team1Exist:
+                    self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_1]]["draws"] += 1
+                if team2Exist:
+                    self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_2]]["draws"] += 1
+            elif row[DATA_COLUMN_GOAL_2] > row[DATA_COLUMN_GOAL_1]:
+                if team1Exist:
+                    self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_1]]["loses"] += 1
+                if team2Exist:
+                    self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_2]]["wins"] += 1
+
+    def __scoreboardTeamsSort__(self, parameter="games"):
+        self.__scoreboardTeams__ = {k: v for k, v in sorted(self.__scoreboardTeams__.items(), key=lambda item: item[1][parameter], reverse = True)}
+
+    def __saveScoreboardTeams__(self):
+        #"wins": 0, "draws": 0, "loses":0, "goals": 0, "intersepted":0, "games": 0
+        headers = ["Команда", "игр", "побед", "проигрышей", "ничьих", "голов", "голы минус голы соперника"]
+        data = []
+        for team in list(self.__scoreboardTeams__):
+            row = [team, self.__scoreboardTeams__[team]["games"], self.__scoreboardTeams__[team]["wins"],
+                         self.__scoreboardTeams__[team]["loses"], self.__scoreboardTeams__[team]["draws"],
+                         self.__scoreboardTeams__[team]["goals"], self.__scoreboardTeams__[team]["intersepted"]]
+            for i in range(len(row)):
+                row[i] = str(row[i])
+            data.append(row)
+        self.__saveStats__(data, "scoreboardTeams", headers)
 
 
 #fonbet = FonbetDataDownloader(365)
