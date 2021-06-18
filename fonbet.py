@@ -24,6 +24,7 @@ def analyzeJSONbyRequest(request, fileName="JSON"):
     webbrowser.open(fileName+".html")
 
 
+
 class FonbetDataDownloader:
     __selfLink__ = "https://clientsapi41.bkfon-resources.com/results/results.json.php?locale=ru&lineDate={}"   # 2021-05-31
     __selfDatetime__ = None
@@ -170,6 +171,39 @@ class FonbetDataDownloader:
         while (self.__selfDaysDownload__ != 0):
             self.__doRequestAndSave__()
 
+class FonbetDataCleaner:
+    __selfFolderData__ = DATA_FOLDER
+    __selfFileName__ = None
+    __selfSpliter__ = DATA_SPLITER
+    __selfFiles__ = []
+
+    def __init__(self):
+        files = os.listdir(self.__selfFolderData__)
+        fileFormat = self.__selfFolderData__ + '\\{file}'
+        self.__selfFiles__ = []
+        for file in files:
+            self.__selfFiles__.append(fileFormat.format(file=file))
+        #print(self.__selfFiles__)
+        self.replaceHyphenOnSpace()
+
+    def replaceHyphenOnSpace(self):
+        for filePath in self.__selfFiles__:
+            file = open(filePath, "r")
+            data = file.read().split("\n")
+            if len(data[-1]) == 0:
+                del data[-1]
+            file.close()
+            for i in range(len(data)):
+                row = data[i].split(self.__selfSpliter__)
+
+                row[DATA_COLUMN_TEAM_1] = row[DATA_COLUMN_TEAM_1].replace("-", " ")
+                row[DATA_COLUMN_TEAM_2] = row[DATA_COLUMN_TEAM_2].replace("-", " ")
+                row = self.__selfSpliter__.join(row)
+                data[i] = row
+            if len(data) != 0:
+                file = open(filePath, "w")
+                file.write("\n".join(data)+"\n")
+                file.close()
 
 class FootballDataAnalyzer:
     __selfFolderData__ = DATA_FOLDER
@@ -409,5 +443,7 @@ class FootballDataAnalyzer:
 
 #fonbet = FonbetDataDownloader(365)
 #fonbet.download()
+
+#dataCleaner = FonbetDataCleaner()
 
 football = FootballDataAnalyzer()
