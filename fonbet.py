@@ -203,6 +203,8 @@ class FootballDataAnalyzer:
         self.winsWichFirstGoalByMinutes()
         self.__createTotalStats__()
         self.__saveScoreboardTeams__()
+
+        self.__createTotalStatsByMinutes__()
         print("stats saved")
 
     def __conservativeClean__(self, data):
@@ -310,7 +312,6 @@ class FootballDataAnalyzer:
             if self.__teams__[team] >= minGames:
                 self.__scoreboardTeams__[team] = {"wins": 0, "draws": 0, "loses":0, "goals": 0, "intersepted":0, "games": 0}
 
-
         for row in self.__selfFullData__:
             team1Exist = True
             try:
@@ -349,21 +350,21 @@ class FootballDataAnalyzer:
                 if team2Exist:
                     self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_2]]["wins"] += 1
 
-    def __createTotalStats__(self, percentGoalsRemove=0.0005):
+    def __createTotalStats__(self, percentGoalsRemove=0.0005, fromMinute=0):
         totals = {}
         for row in self.__selfFullData__:
-            total = int(row[DATA_COLUMN_GOAL_1]) + int(row[DATA_COLUMN_GOAL_2])
-            try:
-                totals[total] += 1
-            except:
-                totals[total] = 1
+            if row[DATA_COLUMN_FIRST_GOAL_MINUTE] >= fromMinute:
+                total = int(row[DATA_COLUMN_GOAL_1]) + int(row[DATA_COLUMN_GOAL_2])
+                try:
+                    totals[total] += 1
+                except:
+                    totals[total] = 1
         removeIfLess = sum([totals[total] for total in totals]) * percentGoalsRemove
         for total in list(totals):
             if totals[total] < removeIfLess:
                 totals.pop(total)
         smGoals = sum([totals[total] for total in totals])
         listTotals = sorted(list(totals))
-        headers = ["Тотал голов", "<", ">"]
         data = []
         less = 0
         more = smGoals
@@ -373,6 +374,21 @@ class FootballDataAnalyzer:
             morePercent = round(100-lessPercent,2)
             row = [str(total+0.5), str(lessPercent)+"%", str(morePercent)+"%"]
             data.append(row)
+        return data
+
+    def __createTotalStatsByMinutes__(self, startMinute=0, endMinute=90, step=10):
+        data = []
+        headers = []
+        headersTemplate = ["({}) Тотал голов 1-й гол с {} мин.", "<", ">",""]
+        for minute in range(startMinute, endMinute, step):
+            headers = headers + headersTemplate
+            headers[-len(headersTemplate)] = headers[-len(headersTemplate)].format(minute, minute)
+            dataAdd = self.__createTotalStats__(fromMinute=minute)
+            if len(data) == 0:
+                data = [row for row in dataAdd]
+            else:
+                for i in range(len(dataAdd)):
+                    data[i] += [""] + dataAdd[i]
         self.__saveStats__(data, "totalStats", headers)
 
     def __scoreboardTeamsSort__(self, parameter="games"):
