@@ -3,8 +3,6 @@ import datetime
 import os
 import time
 import webbrowser
-from operator import itemgetter
-
 
 STATS_FOLDER = "stats"
 
@@ -203,6 +201,7 @@ class FootballDataAnalyzer:
         #print("wins with first goal "+
         #      "{} ({}) from {} = W{}% (WD{}%)  L{}%".format(statsFirstGoal[0], statsFirstGoal[1], statsFirstGoal[2], statsFirstGoal[3], statsFirstGoal[4], statsFirstGoal[5]))
         self.winsWichFirstGoalByMinutes()
+        self.__createTotalStats__()
         self.__saveScoreboardTeams__()
 
     def __conservativeClean__(self, data):
@@ -350,6 +349,37 @@ class FootballDataAnalyzer:
                     self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_1]]["loses"] += 1
                 if team2Exist:
                     self.__scoreboardTeams__[row[DATA_COLUMN_TEAM_2]]["wins"] += 1
+
+    def __createTotalStats__(self, percentGoalsRemove=0.0005):# removeIfLess=6):
+        totals = {}
+        for row in self.__selfFullData__:
+            total = int(row[DATA_COLUMN_GOAL_1]) + int(row[DATA_COLUMN_GOAL_2])
+            try:
+                totals[total] += 1
+            except:
+                totals[total] = 1
+        removeIfLess = sum([totals[total] for total in totals]) * percentGoalsRemove
+        print("removeIfLess",removeIfLess)
+        for total in list(totals):
+            if totals[total] < removeIfLess:
+                totals.pop(total)
+        smGoals = sum([totals[total] for total in totals])
+        listTotals = sorted(list(totals))
+        headers = ["Тотал голов", "<", ">"]
+        data = []
+        less = 0
+        more = smGoals
+        for total in listTotals:
+            less += totals[total]
+            #more -= totals[total]
+            lessPercent = round(less/smGoals*100,2)
+            morePercent = round(100-lessPercent,2)
+            row = [str(total+0.5), str(lessPercent)+"%", str(morePercent)+"%"]
+            data.append(row)
+            #print(total,totals[total],less, lessPercent, morePercent)#,more, less/smGoals)
+        self.__saveStats__(data, "totalStats", headers)
+        #print(totals)
+        #print(listTotals,smGoals)
 
     def __scoreboardTeamsSort__(self, parameter="games"):
         self.__scoreboardTeams__ = {k: v for k, v in sorted(self.__scoreboardTeams__.items(), key=lambda item: item[1][parameter], reverse = True)}

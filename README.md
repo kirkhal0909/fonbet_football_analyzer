@@ -94,8 +94,71 @@
 </tbody>
 </table>
 <hr>
+<p align="center">Тотал голов(всего голов за игру). Процент что забьют меньше или больше голов</p>
+<table class="table table-striped table-bordered" align="center">
+<thead>
+<tr>
+<th>Тотал голов</th>
+<th>&lt;</th>
+<th>&gt;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.5</td>
+<td>7.28%</td>
+<td>92.72%</td>
+</tr>
+<tr>
+<td>1.5</td>
+<td>23.53%</td>
+<td>76.47%</td>
+</tr>
+<tr>
+<td>2.5</td>
+<td>44.1%</td>
+<td>55.9%</td>
+</tr>
+<tr>
+<td>3.5</td>
+<td>63.77%</td>
+<td>36.23%</td>
+</tr>
+<tr>
+<td>4.5</td>
+<td>78.03%</td>
+<td>21.97%</td>
+</tr>
+<tr>
+<td>5.5</td>
+<td>87.39%</td>
+<td>12.61%</td>
+</tr>
+<tr>
+<td>6.5</td>
+<td>92.88%</td>
+<td>7.12%</td>
+</tr>
+<tr>
+<td>7.5</td>
+<td>96.05%</td>
+<td>3.95%</td>
+</tr>
+<tr>
+<td>8.5</td>
+<td>97.87%</td>
+<td>2.13%</td>
+</tr>
+<tr>
+<td>9.5</td>
+<td>98.85%</td>
+<td>1.15%</td>
+</tr>
+</tbody>
+</table>
+<hr>
 <h1 class="code-line" data-line-start=0 data-line-end=1 ><a id="fonbet_football_analyzer_0"></a>Script</h1>
-<p class="has-line-data" data-line-start="21" data-line-end="23"><strong>class</strong> <strong>FonbetDataDownloader</strong>(<strong>daysDownload</strong>=-1,** varDatetime**=None, <strong>rewriteMode</strong>=False,<br>
+<p class="has-line-data" data-line-start="21" data-line-end="23"><strong>class</strong> <strong>FonbetDataDownloader</strong>(<strong>daysDownload</strong>=-1,<strong>varDatetime</strong>=None, <strong>rewriteMode</strong>=False,<br>
 <strong>timeWaitNextRequest</strong>=5, <strong>autoRecconect</strong>=True, <strong>timeAutoRecconect</strong>=20)</p>
 <p class="has-line-data" data-line-start="24" data-line-end="25"><strong>FonbetDataDownloader</strong> - класс для загрузки матчей по футболу</p>
 <h3 class="code-line" data-line-start=26 data-line-end=27 ><a id="___26"></a>параметры инициализации класса</h3>
